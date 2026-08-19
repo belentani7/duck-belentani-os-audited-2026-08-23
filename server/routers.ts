@@ -3,10 +3,11 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { TRPCError } from "@trpc/server";
-import { createAudioAsset, createDawRender, createEvent, createOpportunity, createWaveformComment, createLedgerEntry, createReleaseKit, createRoyaltySplit, listAudioAssets, listDawRenders, listEvents, listLedgerEntries, listNotificationPreferences, listOpportunities, listProjects, listReleaseKits, listRoyaltySplits, listWaveformComments, saveNotificationPreference, updateProject, updateProjectStatus } from "./db";
+import { createAudioAsset, createDawRender, createEvent, createOpportunity, createWaveformComment, createLedgerEntry, createReleaseKit, createRoyaltySplit, listAudioAssets, listDawRenders, listEvents, listLedgerEntries, listNotificationPreferences, listOpportunities, listProjects, listReleaseKits, listRoyaltySplits, listWaveformComments, saveNotificationPreference, updateProject, updateProjectStatus, listLeadSearches, createLeadSearch, listLeadRecords, createLeadSource, createLeadRecord, touchLeadSearch, updateLeadRecord } from "./db";
 import { storageGetSignedUrl, storagePreparePut } from "./storage";
 import { calculateQuote, formatQuoteRange, type ServiceType } from "../shared/quote";
 import { z } from "zod";
+import { scrapePublicPage } from "./leadScraper";
 
 export const opportunityInput = z.object({
   clientName: z.string().trim().min(2).max(180),
@@ -84,6 +85,34 @@ export const appRouter = router({
       await createEvent({ ownerId: ctx.user.id, type: "money", title: "Novo briefing salvo", detail: `${input.clientName} · ${formatQuoteRange(quote.min, quote.max)}`, tone: "amber" });
       return { ...quote, range: formatQuoteRange(quote.min, quote.max) };
     }),
+    leadSearches: protectedProcedure.query(({ ctx }) => listLeadSearches(ctx.user.id)),
+    leads: protectedProcedure.input(z.object({ searchId: z.number().int().positive().optional() }).optional()).query(({ ctx, input }) => listLeadRecords(ctx.user.id, input?.searchId)),
+    createLeadSearch: protectedProcedure.input(z.object({ name: z.string().trim().min(2).max(160), niche: z.string().trim().min(2).max(120), area: z.string().trim().min(2).max(180), variables: z.array(z.string().trim().min(1).max(80)).max(20), sourceUrls: z.array(z.string().url().max(1000)).min(1).max(10) })).mutation(async ({ ctx, input }) => {
+      const result = await createLeadSearch({ ownerId: ctx.user.id, name: input.name, niche: input.niche, area: input.area, variablesJson: JSON.stringify(input.variables), sourceUrlsJson: JSON.stringify(input.sourceUrls), active: 1 });
+      const searchId = Number((result as any)?.[0]?.insertId ?? (result as any)?.insertId);
+      if (!searchId) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Não foi possível criar a busca." });
+      const scan = { inserted: 0, duplicates: 0, errors: [] as string[] };
+      for (const sourceUrl of input.sourceUrls) {
+        let sourceTitle: string | undefined;
+        try {
+          const scraped = await scrapePublicPage(sourceUrl, input.variables);
+          sourceTitle = scraped.title;
+          await createLeadSource({ ownerId: ctx.user.id, searchId, url: sourceUrl, title: sourceTitle, status: scraped.lead ? "processed" : "no-contact", fetchedAt: new Date() });
+          if (scraped.lead) {
+            const created = await createLeadRecord({ ownerId: ctx.user.id, searchId, fullName: scraped.lead.fullName, companyName: scraped.lead.companyName, email: scraped.lead.email, phone: scraped.lead.phone, website: scraped.lead.website, area: input.area, niche: input.niche, intentSignal: scraped.lead.intentSignal, sourceUrl, dedupeKey: scraped.lead.dedupeKey, score: scraped.lead.score, status: "novo" });
+            if (created.inserted) scan.inserted += 1; else scan.duplicates += 1;
+          }
+        } catch (error) {
+          const message = error instanceof Error ? error.message : "Falha desconhecida";
+          scan.errors.push(`${sourceUrl}: ${message}`);
+          await createLeadSource({ ownerId: ctx.user.id, searchId, url: sourceUrl, title: sourceTitle, status: "error", errorMessage: message, fetchedAt: new Date() });
+        }
+      }
+      await touchLeadSearch(ctx.user.id, searchId, { inserted: scan.inserted, duplicates: scan.duplicates, errors: scan.errors.length });
+      await createEvent({ ownerId: ctx.user.id, type: "lead", title: "Busca de potenciais clientes concluída", detail: `${input.niche} · ${scan.inserted} novos leads`, tone: "cyan" });
+      return { searchId, ...scan };
+    }),
+    updateLead: protectedProcedure.input(z.object({ leadId: z.number().int().positive(), status: z.enum(["novo", "revisar", "contactar", "respondeu", "qualificado", "descartado", "convertido"]), notes: z.string().max(2000).optional(), score: z.number().int().min(0).max(100).optional() })).mutation(async ({ ctx, input }) => { await updateLeadRecord(ctx.user.id, input.leadId, { status: input.status, notes: input.notes, score: input.score }); return { success: true } as const; }),
   }),
 });
 

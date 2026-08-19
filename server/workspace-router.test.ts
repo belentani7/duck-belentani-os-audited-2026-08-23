@@ -14,10 +14,19 @@ const dbMocks = vi.hoisted(() => ({
   listProjects: vi.fn().mockResolvedValue([]),
   listAudioAssets: vi.fn().mockResolvedValue([]),
   listWaveformComments: vi.fn().mockResolvedValue([]),
+  listLeadSearches: vi.fn().mockResolvedValue([]),
+  createLeadSearch: vi.fn().mockResolvedValue([{ insertId: 31 }]),
+  listLeadRecords: vi.fn().mockResolvedValue([]),
+  createLeadSource: vi.fn().mockResolvedValue(undefined),
+  createLeadRecord: vi.fn().mockResolvedValue({ inserted: true }),
+  touchLeadSearch: vi.fn().mockResolvedValue(undefined),
+  updateLeadRecord: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock("./db", () => dbMocks);
 vi.mock("./storage", () => ({ storageGetSignedUrl: vi.fn().mockResolvedValue("data:application/octet-stream;base64,AAEC"), storagePreparePut: vi.fn() }));
+const scraperMocks = vi.hoisted(() => ({ scrapePublicPage: vi.fn().mockResolvedValue({ title: "Fonte pública", lead: { companyName: "Estúdio Recife", email: "contato@estudio.com", phone: "+5581999990000", website: "https://estudio.com", intentSignal: "contratar", score: 85, dedupeKey: "contato@estudio.com||estudio.com" } }) }));
+vi.mock("./leadScraper", () => scraperMocks);
 
 const { appRouter } = await import("./routers");
 
@@ -28,7 +37,7 @@ const context = (user: { id: number; role: "user" | "admin" } | null) => ({
 });
 
 describe("workspace router", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => { vi.clearAllMocks(); scraperMocks.scrapePublicPage.mockResolvedValue({ title: "Fonte pública", lead: { companyName: "Estúdio Recife", email: "contato@estudio.com", phone: "+5581999990000", website: "https://estudio.com", intentSignal: "contratar", score: 85, dedupeKey: "contato@estudio.com||estudio.com" } }); });
 
   it("salva um briefing e registra o evento de receita", async () => {
     const caller = appRouter.createCaller(context({ id: 7, role: "user" }));
@@ -111,6 +120,57 @@ describe("workspace router", () => {
     const caller = appRouter.createCaller(context({ id: 7, role: "user" }));
     await caller.workspace.waveformComments({ assetId: 42 });
     expect(dbMocks.listWaveformComments).toHaveBeenCalledWith(7, 42);
+  });
+
+  it("cria uma busca, persiste lead e registra a execução", async () => {
+    const caller = appRouter.createCaller(context({ id: 7, role: "user" }));
+    const result = await caller.workspace.createLeadSearch({ name: "Radar Recife", niche: "Música", area: "Recife", variables: ["contratar", "mixagem"], sourceUrls: ["https://estudio.com/servicos"] });
+    expect(result.searchId).toBe(31);
+    expect(result.inserted).toBe(1);
+    expect(dbMocks.createLeadSearch).toHaveBeenCalledWith(expect.objectContaining({ ownerId: 7, niche: "Música", area: "Recife" }));
+    expect(dbMocks.createLeadRecord).toHaveBeenCalledWith(expect.objectContaining({ ownerId: 7, searchId: 31, email: "contato@estudio.com", score: 85 }));
+    expect(dbMocks.touchLeadSearch).toHaveBeenCalledWith(7, 31, { inserted: 1, duplicates: 0, errors: 0 });
+  });
+
+  it("persiste fonte sem contato e ainda registra evento agregado", async () => {
+    scraperMocks.scrapePublicPage.mockResolvedValueOnce({ title: "Página editorial" });
+    const caller = appRouter.createCaller(context({ id: 7, role: "user" }));
+    const result = await caller.workspace.createLeadSearch({ name: "Radar editorial", niche: "Música", area: "Recife", variables: ["contratar"], sourceUrls: ["https://editorial.com"] });
+    expect(result.inserted).toBe(0);
+    expect(dbMocks.createLeadSource).toHaveBeenCalledWith(expect.objectContaining({ ownerId: 7, searchId: 31, status: "no-contact", title: "Página editorial" }));
+    expect(dbMocks.createEvent).toHaveBeenCalledWith(expect.objectContaining({ ownerId: 7, type: "lead", detail: expect.stringContaining("0 novos leads") }));
+  });
+
+  it("persiste erro da fonte e retorna o erro agregado sem interromper a busca", async () => {
+    scraperMocks.scrapePublicPage.mockRejectedValueOnce(new Error("Fonte bloqueou a requisição"));
+    const caller = appRouter.createCaller(context({ id: 7, role: "user" }));
+    const result = await caller.workspace.createLeadSearch({ name: "Radar com erro", niche: "Música", area: "Recife", variables: ["contratar"], sourceUrls: ["https://bloqueado.com"] });
+    expect(result.errors).toEqual(["https://bloqueado.com: Fonte bloqueou a requisição"]);
+    expect(dbMocks.createLeadSource).toHaveBeenCalledWith(expect.objectContaining({ status: "error", errorMessage: "Fonte bloqueou a requisição" }));
+  });
+
+  it("contabiliza lead duplicado sem inserir um novo registro", async () => {
+    dbMocks.createLeadRecord.mockResolvedValueOnce({ inserted: false, id: 77 });
+    const caller = appRouter.createCaller(context({ id: 7, role: "user" }));
+    const result = await caller.workspace.createLeadSearch({ name: "Radar duplicado", niche: "Música", area: "Recife", variables: ["contratar"], sourceUrls: ["https://estudio.com/servicos"] });
+    expect(result.inserted).toBe(0);
+    expect(result.duplicates).toBe(1);
+  });
+
+  it("bloqueia criação de busca sem autenticação", async () => {
+    const caller = appRouter.createCaller(context(null));
+    await expect(caller.workspace.createLeadSearch({ name: "Radar", niche: "Música", area: "Recife", variables: ["contratar"], sourceUrls: ["https://estudio.com"] })).rejects.toMatchObject({ code: "UNAUTHORIZED" });
+  });
+
+  it("atualiza status e notas de um lead do proprietário", async () => {
+    const caller = appRouter.createCaller(context({ id: 7, role: "user" }));
+    await caller.workspace.updateLead({ leadId: 44, status: "contactar", notes: "Revisar portfólio" });
+    expect(dbMocks.updateLeadRecord).toHaveBeenCalledWith(7, 44, { status: "contactar", notes: "Revisar portfólio", score: undefined });
+  });
+
+  it("bloqueia leitura de leads sem autenticação", async () => {
+    const caller = appRouter.createCaller(context(null));
+    await expect(caller.workspace.leads()).rejects.toMatchObject({ code: "UNAUTHORIZED" });
   });
 
   it("bloqueia a rota administrativa para usuário comum", async () => {

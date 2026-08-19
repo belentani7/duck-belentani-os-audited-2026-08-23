@@ -80,3 +80,24 @@
 - [x] Testar o fluxo frontend de salvar preferência de canal e eventos
 - [x] Tornar tipos de evento selecionáveis na central de notificações
 - [x] Testar o fluxo frontend de salvar preferência e payload enviado ao tRPC
+- [x] Reorientar o produto para uma máquina de prospecção automatizada por nicho e área, com música como preset inicial
+- [x] Definir fontes públicas e APIs autorizadas, limites de coleta e regras de conformidade para datos de contacto
+- [x] Criar configurador de nicho, área geográfica e variables de búsqueda
+- [x] Criar modelo persistente de leads con nombre, empresa, email, teléfono, web, fuente y señales
+- [x] Implementar colectores, normalización, validación de contacto y deduplicación
+- [x] Implementar scoring de potencial y estados de pipeline comercial
+- [x] Implementar panel de búsqueda, triage, exportación CSV y filtros avanzados
+- [ ] Adicionar automações de actualización y notificaciones sin spam o envío automático no autorizado
+- [x] Adicionar KPI explícito e persistente de leads duplicados na Home
+- [x] Substituir os KPIs centrais musicais por KPIs de leads, buscas, duplicados e conversões
+- [x] Completar testes de createLeadSearch para fonte, evento, erro, no-contact e retorno agregado
+- [x] Tornar a Home realmente lead-first, rebaixando blocos musicais e recalculando métricas por leads e buscas
+- [x] Implementar normalização forte de email e telefone com testes para formatos inválidos
+- [x] Adicionar filtros dedicados por nicho e por fonte
+- [x] Adicionar testes de deduplicação, persistência e fluxo completo de createLeadSearch
+- [x] Reorientar Home e métricas principais para uma experiência lead-first
+- [x] Corrigir o scraper para não criar lead sem contato ou sinal real e tornar no-contact alcançável
+- [x] Fortalecer validação de email e telefone
+- [x] Adicionar filtros avançados por texto, nicho, área, score, fonte e disponibilidade de contato
+- [x] Adicionar testes Vitest para rotas de prospecção, autorização, deduplicação, persistência e status
+- [x] Escribir pruebas de datos, permissões, conformidade y documentación de operación

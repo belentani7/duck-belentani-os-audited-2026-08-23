@@ -1,6 +1,6 @@
 import { and, desc, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, InsertOpportunity, opportunities, studioEvents, studioProjects, users, audioAssets, waveformComments, InsertAudioAsset, InsertWaveformComment, ledgerEntries, royaltySplits, releaseKits, notificationPreferences, dawRenders } from "../drizzle/schema";
+import { InsertUser, InsertOpportunity, opportunities, studioEvents, studioProjects, users, audioAssets, waveformComments, InsertAudioAsset, InsertWaveformComment, ledgerEntries, royaltySplits, releaseKits, notificationPreferences, dawRenders, leadSearches, leadSources, leadRecords, InsertLeadSearch, InsertLeadRecord } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { filterAssetsForProject } from "../shared/audio-version";
 
@@ -165,4 +165,51 @@ export async function createOpportunity(input: Omit<InsertOpportunity, "ownerId"
   if (!db) throw new Error("Database unavailable");
   const result = await db.insert(opportunities).values(input);
   return result;
+}
+
+export async function listLeadSearches(ownerId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(leadSearches).where(eq(leadSearches.ownerId, ownerId)).orderBy(desc(leadSearches.createdAt)).limit(50);
+}
+
+export async function createLeadSearch(input: Omit<InsertLeadSearch, "ownerId"> & { ownerId: number }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  return db.insert(leadSearches).values(input);
+}
+
+export async function touchLeadSearch(ownerId: number, searchId: number, counts: { inserted: number; duplicates: number; errors: number }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  return db.update(leadSearches).set({ lastRunAt: new Date(), lastInsertedCount: counts.inserted, lastDuplicateCount: counts.duplicates, lastErrorCount: counts.errors }).where(and(eq(leadSearches.ownerId, ownerId), eq(leadSearches.id, searchId)));
+}
+
+export async function listLeadRecords(ownerId: number, searchId?: number) {
+  const db = await getDb();
+  if (!db) return [];
+  const filters = searchId ? and(eq(leadRecords.ownerId, ownerId), eq(leadRecords.searchId, searchId)) : eq(leadRecords.ownerId, ownerId);
+  return db.select().from(leadRecords).where(filters).orderBy(desc(leadRecords.score), desc(leadRecords.discoveredAt)).limit(500);
+}
+
+export async function createLeadSource(input: typeof leadSources.$inferInsert) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  const result = await db.insert(leadSources).values(input);
+  return result;
+}
+
+export async function createLeadRecord(input: InsertLeadRecord) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  const existing = await db.select({ id: leadRecords.id }).from(leadRecords).where(and(eq(leadRecords.ownerId, input.ownerId), eq(leadRecords.dedupeKey, input.dedupeKey))).limit(1);
+  if (existing.length > 0) return { inserted: false, id: existing[0].id };
+  const result = await db.insert(leadRecords).values(input);
+  return { inserted: true, result };
+}
+
+export async function updateLeadRecord(ownerId: number, leadId: number, input: { status?: string; notes?: string; score?: number }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  return db.update(leadRecords).set(input).where(and(eq(leadRecords.ownerId, ownerId), eq(leadRecords.id, leadId)));
 }

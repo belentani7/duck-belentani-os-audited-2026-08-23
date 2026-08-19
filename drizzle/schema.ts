@@ -175,3 +175,58 @@ export type AudioAsset = typeof audioAssets.$inferSelect;
 export type InsertAudioAsset = typeof audioAssets.$inferInsert;
 export type WaveformComment = typeof waveformComments.$inferSelect;
 export type InsertWaveformComment = typeof waveformComments.$inferInsert;
+
+export const leadSearches = mysqlTable("leadSearches", {
+  id: int("id").autoincrement().primaryKey(),
+  ownerId: int("ownerId").notNull(),
+  name: varchar("name", { length: 160 }).notNull(),
+  niche: varchar("niche", { length: 120 }).notNull(),
+  area: varchar("area", { length: 180 }).notNull(),
+  variablesJson: text("variablesJson"),
+  sourceUrlsJson: text("sourceUrlsJson"),
+  active: int("active").notNull().default(1),
+  lastInsertedCount: int("lastInsertedCount").notNull().default(0),
+  lastDuplicateCount: int("lastDuplicateCount").notNull().default(0),
+  lastErrorCount: int("lastErrorCount").notNull().default(0),
+  lastRunAt: timestamp("lastRunAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export const leadSources = mysqlTable("leadSources", {
+  id: int("id").autoincrement().primaryKey(),
+  ownerId: int("ownerId").notNull(),
+  searchId: int("searchId").notNull(),
+  url: varchar("url", { length: 1000 }).notNull(),
+  title: varchar("title", { length: 255 }),
+  status: varchar("status", { length: 30 }).notNull().default("pending"),
+  fetchedAt: timestamp("fetchedAt"),
+  errorMessage: varchar("errorMessage", { length: 500 }),
+});
+
+export const leadRecords = mysqlTable("leadRecords", {
+  id: int("id").autoincrement().primaryKey(),
+  ownerId: int("ownerId").notNull(),
+  searchId: int("searchId").notNull(),
+  sourceId: int("sourceId"),
+  fullName: varchar("fullName", { length: 180 }),
+  companyName: varchar("companyName", { length: 180 }),
+  email: varchar("email", { length: 320 }),
+  phone: varchar("phone", { length: 60 }),
+  website: varchar("website", { length: 500 }),
+  area: varchar("area", { length: 180 }),
+  niche: varchar("niche", { length: 120 }),
+  intentSignal: varchar("intentSignal", { length: 255 }),
+  sourceUrl: varchar("sourceUrl", { length: 1000 }).notNull(),
+  dedupeKey: varchar("dedupeKey", { length: 500 }).notNull(),
+  score: int("score").notNull().default(0),
+  status: varchar("status", { length: 30 }).notNull().default("novo"),
+  notes: text("notes"),
+  discoveredAt: timestamp("discoveredAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type LeadSearch = typeof leadSearches.$inferSelect;
+export type InsertLeadSearch = typeof leadSearches.$inferInsert;
+export type LeadSource = typeof leadSources.$inferSelect;
+export type LeadRecord = typeof leadRecords.$inferSelect;
+export type InsertLeadRecord = typeof leadRecords.$inferInsert;
