@@ -15,6 +15,20 @@
       "when": 1787117999223,
       "tag": "0001_real_black_bird",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1787118429356,
+      "tag": "0002_fantastic_iron_fist",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1787118828163,
+      "tag": "0003_worthless_havok",
+      "breakpoints": true
     }
   ]
 }

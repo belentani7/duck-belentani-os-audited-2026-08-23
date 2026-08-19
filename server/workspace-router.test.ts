@@ -2,10 +2,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const dbMocks = vi.hoisted(() => ({
   createEvent: vi.fn().mockResolvedValue(undefined),
+  createAudioAsset: vi.fn().mockResolvedValue(undefined),
+  createWaveformComment: vi.fn().mockResolvedValue(undefined),
   createOpportunity: vi.fn().mockResolvedValue(undefined),
   listEvents: vi.fn().mockResolvedValue([]),
   listOpportunities: vi.fn().mockResolvedValue([]),
   listProjects: vi.fn().mockResolvedValue([]),
+  listAudioAssets: vi.fn().mockResolvedValue([]),
+  listWaveformComments: vi.fn().mockResolvedValue([]),
 }));
 
 vi.mock("./db", () => dbMocks);
@@ -50,6 +54,24 @@ describe("workspace router", () => {
       trackCount: 1,
       deadlineDays: 7,
     })).rejects.toMatchObject({ code: "UNAUTHORIZED" });
+  });
+
+  it("consulta assets pelo projeto correto", async () => {
+    const caller = appRouter.createCaller(context({ id: 7, role: "user" }));
+    await caller.workspace.audioAssets({ projectId: 9 });
+    expect(dbMocks.listAudioAssets).toHaveBeenCalledWith(7, 9);
+  });
+
+  it("cria comentário vinculado ao asset correto", async () => {
+    const caller = appRouter.createCaller(context({ id: 7, role: "user" }));
+    await caller.workspace.createWaveformComment({ assetId: 42, timestampSeconds: 73, body: "Subir o synth" });
+    expect(dbMocks.createWaveformComment).toHaveBeenCalledWith({ ownerId: 7, assetId: 42, timestampSeconds: 73, body: "Subir o synth" });
+  });
+
+  it("consulta comentários pelo asset correto", async () => {
+    const caller = appRouter.createCaller(context({ id: 7, role: "user" }));
+    await caller.workspace.waveformComments({ assetId: 42 });
+    expect(dbMocks.listWaveformComments).toHaveBeenCalledWith(7, 42);
   });
 
   it("bloqueia a rota administrativa para usuário comum", async () => {

@@ -69,3 +69,35 @@ export type StudioEvent = typeof studioEvents.$inferSelect;
 export type InsertStudioEvent = typeof studioEvents.$inferInsert;
 export type Opportunity = typeof opportunities.$inferSelect;
 export type InsertOpportunity = typeof opportunities.$inferInsert;
+
+export const audioAssets = mysqlTable("audioAssets", {
+  id: int("id").autoincrement().primaryKey(),
+  ownerId: int("ownerId").notNull(),
+  projectId: int("projectId").notNull(),
+  fileName: varchar("fileName", { length: 255 }).notNull(),
+  storageKey: varchar("storageKey", { length: 500 }).notNull(),
+  versionLabel: varchar("versionLabel", { length: 120 }).notNull(),
+  mimeType: varchar("mimeType", { length: 100 }).notNull(),
+  fileSize: int("fileSize").notNull().default(0),
+  durationSeconds: int("durationSeconds").notNull().default(0),
+  bpm: int("bpm"),
+  loudnessLufs: varchar("loudnessLufs", { length: 20 }),
+  waveformJson: text("waveformJson"),
+  checksumSha256: varchar("checksumSha256", { length: 64 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export const waveformComments = mysqlTable("waveformComments", {
+  id: int("id").autoincrement().primaryKey(),
+  ownerId: int("ownerId").notNull(),
+  assetId: int("assetId").notNull(),
+  timestampSeconds: int("timestampSeconds").notNull(),
+  body: varchar("body", { length: 500 }).notNull(),
+  resolved: int("resolved").notNull().default(0),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type AudioAsset = typeof audioAssets.$inferSelect;
+export type InsertAudioAsset = typeof audioAssets.$inferInsert;
+export type WaveformComment = typeof waveformComments.$inferSelect;
+export type InsertWaveformComment = typeof waveformComments.$inferInsert;

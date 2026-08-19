@@ -28,6 +28,17 @@ function appendHashSuffix(relKey: string): string {
   return `${relKey.slice(0, lastDot)}_${hash}${relKey.slice(lastDot)}`;
 }
 
+export async function storagePreparePut(relKey: string): Promise<{ key: string; url: string }> {
+  const { forgeUrl, forgeKey } = getForgeConfig();
+  const key = appendHashSuffix(normalizeKey(relKey));
+  const presignUrl = new URL("v1/storage/presign/put", forgeUrl + "/");
+  presignUrl.searchParams.set("path", key);
+  const response = await fetch(presignUrl, { headers: { Authorization: `Bearer ${forgeKey}` } });
+  if (!response.ok) throw new Error(`Storage presign failed (${response.status})`);
+  const data = (await response.json()) as { url: string };
+  return { key, url: data.url };
+}
+
 export async function storagePut(
   relKey: string,
   data: Buffer | Uint8Array | string,

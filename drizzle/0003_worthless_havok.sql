@@ -1,0 +1,1 @@
+ALTER TABLE `audioAssets` ADD `checksumSha256` varchar(64);

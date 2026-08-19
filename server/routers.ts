@@ -2,7 +2,9 @@ import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
-import { createEvent, createOpportunity, listEvents, listOpportunities, listProjects } from "./db";
+import { TRPCError } from "@trpc/server";
+import { createAudioAsset, createEvent, createOpportunity, createWaveformComment, listAudioAssets, listEvents, listOpportunities, listProjects, listWaveformComments } from "./db";
+import { storageGetSignedUrl, storagePreparePut } from "./storage";
 import { calculateQuote, formatQuoteRange, type ServiceType } from "../shared/quote";
 import { z } from "zod";
 
@@ -29,6 +31,15 @@ export const appRouter = router({
   }),
 
   workspace: router({
+    audioAssets: protectedProcedure.input(z.object({ projectId: z.number().int().positive() })).query(({ ctx, input }) => listAudioAssets(ctx.user.id, input.projectId)),
+    waveformComments: protectedProcedure.input(z.object({ assetId: z.number().int().positive() })).query(({ ctx, input }) => listWaveformComments(ctx.user.id, input.assetId)),
+    createWaveformComment: protectedProcedure.input(z.object({ assetId: z.number().int().positive(), timestampSeconds: z.number().int().min(0), body: z.string().trim().min(2).max(500) })).mutation(async ({ ctx, input }) => {
+      await createWaveformComment({ ...input, ownerId: ctx.user.id });
+      return { success: true } as const;
+    }),
+    prepareAudioUpload: protectedProcedure.input(z.object({ fileName: z.string().min(1).max(255), mimeType: z.string().min(1).max(100) })).mutation(({ ctx, input }) => storagePreparePut(`audio/${ctx.user.id}/${Date.now()}-${input.fileName}`)),
+    registerAudioAsset: protectedProcedure.input(z.object({ projectId: z.number().int().positive(), fileName: z.string().min(1).max(255), storageKey: z.string().min(1).max(500), mimeType: z.string().min(1).max(100), fileSize: z.number().int().nonnegative(), checksumSha256: z.string().length(64), versionLabel: z.string().min(1).max(120), durationSeconds: z.number().int().nonnegative().default(0), bpm: z.number().int().positive().optional(), loudnessLufs: z.string().max(20).optional(), waveformJson: z.string().max(100000).optional() })).mutation(async ({ ctx, input }) => { const signedUrl = await storageGetSignedUrl(input.storageKey); const storedResponse = await fetch(signedUrl); if (!storedResponse.ok) throw new TRPCError({ code: "BAD_REQUEST", message: "Não foi possível verificar o arquivo armazenado." }); const storedBytes = await storedResponse.arrayBuffer(); const digest = await crypto.subtle.digest("SHA-256", storedBytes); const storedChecksum = Array.from(new Uint8Array(digest)).map((byte) => byte.toString(16).padStart(2, "0")).join(""); if (storedChecksum !== input.checksumSha256) throw new TRPCError({ code: "BAD_REQUEST", message: "A integridade do upload não foi confirmada." }); await createAudioAsset({ ...input, ownerId: ctx.user.id }); return { success: true } as const; }),
+    getAudioDownloadUrl: protectedProcedure.input(z.object({ storageKey: z.string().min(1).max(500) })).query(({ input }) => storageGetSignedUrl(input.storageKey)),
     dashboard: protectedProcedure.query(async ({ ctx }) => {
       const [projects, events, opportunities] = await Promise.all([
         listProjects(ctx.user.id),

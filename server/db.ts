@@ -1,6 +1,6 @@
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, InsertOpportunity, opportunities, studioEvents, studioProjects, users } from "../drizzle/schema";
+import { InsertUser, InsertOpportunity, opportunities, studioEvents, studioProjects, users, audioAssets, waveformComments, InsertAudioAsset, InsertWaveformComment } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -105,6 +105,30 @@ export async function listOpportunities(ownerId: number) {
   const db = await getDb();
   if (!db) return [];
   return db.select().from(opportunities).where(eq(opportunities.ownerId, ownerId)).orderBy(desc(opportunities.createdAt)).limit(20);
+}
+
+export async function listAudioAssets(ownerId: number, projectId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(audioAssets).where(and(eq(audioAssets.ownerId, ownerId), eq(audioAssets.projectId, projectId))).orderBy(desc(audioAssets.createdAt)).limit(50);
+}
+
+export async function listWaveformComments(ownerId: number, assetId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(waveformComments).where(eq(waveformComments.ownerId, ownerId)).orderBy(desc(waveformComments.timestampSeconds)).limit(100);
+}
+
+export async function createAudioAsset(input: InsertAudioAsset) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  return db.insert(audioAssets).values(input);
+}
+
+export async function createWaveformComment(input: InsertWaveformComment) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  return db.insert(waveformComments).values(input);
 }
 
 export async function createEvent(input: typeof studioEvents.$inferInsert) {

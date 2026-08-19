@@ -3,9 +3,9 @@
 - [x] Painel inicial em português para Duck/Lucas, com foco em Recife, Aracaju e colaboração internacional
 - [x] Dashboard operacional com projetos ativos, próximos passos, receita prevista e pendências
 - [ ] Gestão de projetos musicais com estados de produção e responsáveis
-- [ ] Upload e organização de stems/renders por versão, com metadados de arquivo e integridade
-- [ ] Player de áudio com waveform visual e comparação A/B
-- [ ] Comentários e marcadores temporais vinculados à waveform
+- [x] Upload e organização de stems/renders por versão, com metadados de arquivo e integridade
+- [x] Player de áudio com waveform visual e comparação A/B
+- [x] Comentários e marcadores temporais vinculados à waveform
 - [ ] Área de cliente separada do painel interno, inspirada no Duck Studio OS existente
 - [x] Catálogo de serviços e formulário de briefing para transformar produção em oportunidades comerciais
 - [x] Motor de orçamento inicial baseado em serviço, duração, número de faixas e prazo
@@ -28,3 +28,20 @@
 - [x] Adicionar teste Vitest da mutation workspace.createOpportunity, cobrindo sucesso, evento criado e erro sem autenticação
 - [x] Adicionar testes de autorização tRPC protegida/admin validando os erros reais dos procedimentos
 - [x] Testar workspace.createOpportunity rejeitando chamada sem ctx.user com erro UNAUTHORIZED
+- [x] Criar workbench de áudio persistente com ativos, versões, waveform e anotações temporais
+- [x] Implementar upload real e criação persistente de audioAssets com storage e metadados
+- [x] Conectar waveform ao waveformJson/análise real do asset, removendo barras simuladas
+- [x] Corrigir filtro de assets por projectId e testar versionamento/comentários
+- [x] Ligar enviar render, nova versão e reprodução/download a ações reais
+- [x] Renderizar marcadores persistidos na waveform com posição baseada em timestamp/duração
+- [x] Calcular o cursor usando durationSeconds real do asset
+- [x] Carregar comentários do asset ativo automaticamente
+- [x] Testar comentários temporais vinculados ao asset correto
+- [x] Persistir checksum de integridade no upload de áudio e validar o arquivo enviado
+- [x] Implementar comparação A/B entre duas versões ou referência
+- [x] Testar filtro real por projectId e versionamento de assets
+- [x] Adicionar download explícito do asset na interface
+- [x] Testar criação de waveformComment vinculada ao asset
+- [ ] Validar o checksum do upload no backend antes de concluir o registro do asset
+- [ ] Fazer A/B trocar waveform, metadados, duração e comentários junto com a referência
+- [ ] Testar efetivamente o filtro por projeto e a numeração de versões
