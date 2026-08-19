@@ -31,6 +31,7 @@ export const studioProjects = mysqlTable("studioProjects", {
   name: varchar("name", { length: 180 }).notNull(),
   artist: varchar("artist", { length: 180 }).notNull(),
   status: varchar("status", { length: 40 }).notNull().default("Briefing"),
+  responsible: varchar("responsible", { length: 120 }).notNull().default("Duck"),
   progress: int("progress").notNull().default(0),
   color: varchar("color", { length: 20 }).notNull().default("lime"),
   currentVersion: varchar("currentVersion", { length: 120 }).notNull().default("Ideia inicial"),
@@ -70,6 +71,77 @@ export type InsertStudioEvent = typeof studioEvents.$inferInsert;
 export type Opportunity = typeof opportunities.$inferSelect;
 export type InsertOpportunity = typeof opportunities.$inferInsert;
 
+export const ledgerEntries = mysqlTable("ledgerEntries", {
+  id: int("id").autoincrement().primaryKey(),
+  ownerId: int("ownerId").notNull(),
+  projectId: int("projectId"),
+  opportunityId: int("opportunityId"),
+  description: varchar("description", { length: 180 }).notNull(),
+  amountCents: int("amountCents").notNull(),
+  currency: varchar("currency", { length: 3 }).notNull().default("BRL"),
+  status: varchar("status", { length: 30 }).notNull().default("pending"),
+  dueAt: timestamp("dueAt"),
+  paidAt: timestamp("paidAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export const royaltySplits = mysqlTable("royaltySplits", {
+  id: int("id").autoincrement().primaryKey(),
+  ownerId: int("ownerId").notNull(),
+  projectId: int("projectId").notNull(),
+  participantName: varchar("participantName", { length: 180 }).notNull(),
+  role: varchar("role", { length: 80 }).notNull(),
+  percentage: varchar("percentage", { length: 10 }).notNull(),
+  status: varchar("status", { length: 30 }).notNull().default("draft"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type LedgerEntry = typeof ledgerEntries.$inferSelect;
+export type RoyaltySplit = typeof royaltySplits.$inferSelect;
+
+export const releaseKits = mysqlTable("releaseKits", {
+  id: int("id").autoincrement().primaryKey(),
+  ownerId: int("ownerId").notNull(),
+  projectId: int("projectId"),
+  assetId: int("assetId"),
+  title: varchar("title", { length: 180 }).notNull(),
+  concept: text("concept"),
+  isrc: varchar("isrc", { length: 30 }),
+  releaseDate: timestamp("releaseDate"),
+  creditsJson: text("creditsJson"),
+  linksJson: text("linksJson"),
+  deliveryStatus: varchar("deliveryStatus", { length: 40 }).notNull().default("em produção"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ReleaseKit = typeof releaseKits.$inferSelect;
+
+export const notificationPreferences = mysqlTable("notificationPreferences", {
+  id: int("id").autoincrement().primaryKey(),
+  ownerId: int("ownerId").notNull(),
+  channel: varchar("channel", { length: 40 }).notNull(),
+  destination: varchar("destination", { length: 255 }),
+  enabled: int("enabled").notNull().default(0),
+  eventTypes: text("eventTypes"),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export const dawRenders = mysqlTable("dawRenders", {
+  id: int("id").autoincrement().primaryKey(),
+  ownerId: int("ownerId").notNull(),
+  projectId: int("projectId").notNull(),
+  assetId: int("assetId"),
+  externalId: varchar("externalId", { length: 180 }).notNull(),
+  source: varchar("source", { length: 40 }).notNull().default("ableton"),
+  status: varchar("status", { length: 30 }).notNull().default("received"),
+  metadataJson: text("metadataJson"),
+  receivedAt: timestamp("receivedAt").defaultNow().notNull(),
+});
+
+export type NotificationPreference = typeof notificationPreferences.$inferSelect;
+export type DawRender = typeof dawRenders.$inferSelect;
+
 export const audioAssets = mysqlTable("audioAssets", {
   id: int("id").autoincrement().primaryKey(),
   ownerId: int("ownerId").notNull(),
@@ -84,6 +156,8 @@ export const audioAssets = mysqlTable("audioAssets", {
   loudnessLufs: varchar("loudnessLufs", { length: 20 }),
   waveformJson: text("waveformJson"),
   checksumSha256: varchar("checksumSha256", { length: 64 }),
+  peakDb: varchar("peakDb", { length: 20 }),
+  rms: varchar("rms", { length: 20 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 

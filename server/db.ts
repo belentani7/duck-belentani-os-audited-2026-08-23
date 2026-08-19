@@ -1,7 +1,8 @@
 import { and, desc, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, InsertOpportunity, opportunities, studioEvents, studioProjects, users, audioAssets, waveformComments, InsertAudioAsset, InsertWaveformComment } from "../drizzle/schema";
+import { InsertUser, InsertOpportunity, opportunities, studioEvents, studioProjects, users, audioAssets, waveformComments, InsertAudioAsset, InsertWaveformComment, ledgerEntries, royaltySplits, releaseKits, notificationPreferences, dawRenders } from "../drizzle/schema";
 import { ENV } from './_core/env';
+import { filterAssetsForProject } from "../shared/audio-version";
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
@@ -89,6 +90,27 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
+export async function listNotificationPreferences(ownerId: number) { const db = await getDb(); if (!db) return []; return db.select().from(notificationPreferences).where(eq(notificationPreferences.ownerId, ownerId)).orderBy(desc(notificationPreferences.updatedAt)).limit(20); }
+export async function saveNotificationPreference(input: typeof notificationPreferences.$inferInsert) { const db = await getDb(); if (!db) throw new Error("Database unavailable"); return db.insert(notificationPreferences).values(input); }
+export async function createDawRender(input: typeof dawRenders.$inferInsert) { const db = await getDb(); if (!db) throw new Error("Database unavailable"); return db.insert(dawRenders).values(input); }
+export async function listDawRenders(ownerId: number, projectId: number) { const db = await getDb(); if (!db) return []; return db.select().from(dawRenders).where(and(eq(dawRenders.ownerId, ownerId), eq(dawRenders.projectId, projectId))).orderBy(desc(dawRenders.receivedAt)).limit(50); }
+
+export async function listReleaseKits(ownerId: number) { const db = await getDb(); if (!db) return []; return db.select().from(releaseKits).where(eq(releaseKits.ownerId, ownerId)).orderBy(desc(releaseKits.updatedAt)).limit(20); }
+export async function createReleaseKit(input: typeof releaseKits.$inferInsert) { const db = await getDb(); if (!db) throw new Error("Database unavailable"); return db.insert(releaseKits).values(input); }
+
+export async function listLedgerEntries(ownerId: number) { const db = await getDb(); if (!db) return []; return db.select().from(ledgerEntries).where(eq(ledgerEntries.ownerId, ownerId)).orderBy(desc(ledgerEntries.createdAt)).limit(50); }
+export async function listRoyaltySplits(ownerId: number, projectId?: number) { const db = await getDb(); if (!db) return []; return db.select().from(royaltySplits).where(eq(royaltySplits.ownerId, ownerId)).orderBy(desc(royaltySplits.createdAt)).limit(100); }
+export async function createLedgerEntry(input: typeof ledgerEntries.$inferInsert) { const db = await getDb(); if (!db) throw new Error("Database unavailable"); return db.insert(ledgerEntries).values(input); }
+export async function createRoyaltySplit(input: typeof royaltySplits.$inferInsert) { const db = await getDb(); if (!db) throw new Error("Database unavailable"); return db.insert(royaltySplits).values(input); }
+
+export async function updateProject(ownerId: number, projectId: number, input: { status?: string; progress?: number; responsible?: string }) { const db = await getDb(); if (!db) throw new Error("Database unavailable"); return db.update(studioProjects).set({ ...input, lastActivityAt: new Date() }).where(and(eq(studioProjects.ownerId, ownerId), eq(studioProjects.id, projectId))); }
+
+export async function updateProjectStatus(ownerId: number, projectId: number, status: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  return db.update(studioProjects).set({ status, lastActivityAt: new Date() }).where(and(eq(studioProjects.ownerId, ownerId), eq(studioProjects.id, projectId)));
+}
+
 export async function listProjects(ownerId: number) {
   const db = await getDb();
   if (!db) return [];
@@ -110,7 +132,8 @@ export async function listOpportunities(ownerId: number) {
 export async function listAudioAssets(ownerId: number, projectId: number) {
   const db = await getDb();
   if (!db) return [];
-  return db.select().from(audioAssets).where(and(eq(audioAssets.ownerId, ownerId), eq(audioAssets.projectId, projectId))).orderBy(desc(audioAssets.createdAt)).limit(50);
+  const rows = await db.select().from(audioAssets).where(eq(audioAssets.ownerId, ownerId)).orderBy(desc(audioAssets.createdAt)).limit(50);
+  return filterAssetsForProject(rows, projectId);
 }
 
 export async function listWaveformComments(ownerId: number, assetId: number) {

@@ -1,0 +1,1 @@
+ALTER TABLE `releaseKits` ADD `assetId` int;

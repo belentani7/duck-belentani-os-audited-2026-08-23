@@ -1,0 +1,1 @@
+ALTER TABLE `releaseKits` ADD `deliveryStatus` varchar(40) DEFAULT 'em produção' NOT NULL;

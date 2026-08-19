@@ -1,0 +1,1 @@
+ALTER TABLE `studioProjects` ADD `responsible` varchar(120) DEFAULT 'Duck' NOT NULL;

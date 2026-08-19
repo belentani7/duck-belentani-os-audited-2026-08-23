@@ -2,22 +2,22 @@
 
 - [x] Painel inicial em português para Duck/Lucas, com foco em Recife, Aracaju e colaboração internacional
 - [x] Dashboard operacional com projetos ativos, próximos passos, receita prevista e pendências
-- [ ] Gestão de projetos musicais com estados de produção e responsáveis
+- [x] Gestão de projetos musicais com estados de produção e responsáveis
 - [x] Upload e organização de stems/renders por versão, com metadados de arquivo e integridade
 - [x] Player de áudio com waveform visual e comparação A/B
 - [x] Comentários e marcadores temporais vinculados à waveform
-- [ ] Área de cliente separada do painel interno, inspirada no Duck Studio OS existente
+- [x] Área de cliente separada do painel interno, inspirada no Duck Studio OS existente
 - [x] Catálogo de serviços e formulário de briefing para transformar produção em oportunidades comerciais
 - [x] Motor de orçamento inicial baseado em serviço, duração, número de faixas e prazo
-- [ ] Registro de pagamentos, royalties, créditos e status de entrega
-- [ ] Central de notificações e eventos automatizáveis, preparada para Telegram e outros canais
-- [ ] Análise local de áudio no navegador para pico, RMS, duração e waveform
-- [ ] Estrutura de integração futura com DAW Bridge para renders exportados
-- [ ] Press kit e ficha de lançamento com ISRC, créditos e links
+- [x] Registro de pagamentos, royalties, créditos e status de entrega
+- [x] Central de notificações e eventos automatizáveis, preparada para Telegram e outros canais
+- [x] Análise local de áudio no navegador para pico, RMS, duração e waveform
+- [x] Estrutura de integração futura com DAW Bridge para renders exportados
+- [x] Press kit e ficha de lançamento com ISRC, créditos e links
 - [x] Identidade visual dark com verde neon contido, painéis translúcidos e ação direta
 - [x] Testes Vitest para regras de negócio, autenticação, orçamento e permissões
 - [x] Verificação visual responsiva em desktop e mobile
-- [ ] Documentação de operação e próximos passos de integrações externas
+- [x] Documentação de operação e próximos passos de integrações externas
 - [x] Conectar o dashboard a dados persistidos de projetos, eventos, métricas e pendências, removendo arrays mock do Home.tsx
 - [x] Implementar briefing completo com cliente, serviço, duração, número de faixas, prazo e submissão persistida
 - [x] Expandir o motor de orçamento para considerar serviço, duração, número de faixas e prazo
@@ -42,6 +42,41 @@
 - [x] Testar filtro real por projectId e versionamento de assets
 - [x] Adicionar download explícito do asset na interface
 - [x] Testar criação de waveformComment vinculada ao asset
-- [ ] Validar o checksum do upload no backend antes de concluir o registro do asset
-- [ ] Fazer A/B trocar waveform, metadados, duração e comentários junto com a referência
-- [ ] Testar efetivamente o filtro por projeto e a numeração de versões
+- [x] Validar o checksum do upload no backend antes de concluir o registro do asset
+- [x] Fazer A/B trocar waveform, metadados, duração e comentários junto com a referência
+- [x] Testar efetivamente o filtro por projeto e a numeração de versões
+- [x] Criar rota/área de cliente isolada com acesso protegido e ações reais de aprovação, download e comentário
+- [x] Persistir ISRC, créditos, links e datas do press kit via backend
+- [x] Implementar exportação/compartilhamento funcional do press kit
+- [x] Calcular e persistir pico do áudio junto ao asset
+- [x] Persistir RMS/pico ou recalcular ao carregar versões existentes
+- [x] Testar análise local de duração, waveform, RMS e pico
+- [x] Testar duração extraída do áudio no fluxo de upload/registro
+- [x] Testar integração do registro persistido com waveform, RMS, pico e duração
+- [x] Testar filtro efetivo de audioAssets por projectId e versionamento sucessivo
+- [x] Testar upload com duração extraída do áudio antes do registro
+- [x] Testar ponta a ponta análise real até payload persistido do asset
+- [x] Criar teste de browser do upload com decodeAudioData mockado e duração extraída
+- [x] Criar teste de browser do fluxo upload–análise–payload–registro com waveform, RMS, pico e duração
+- [x] Implementar edição real de créditos, links e status de entrega
+- [x] Carregar releaseKits persistidos na UI para edição contínua
+- [x] Criar compartilhamento funcional ou limitar explicitamente o escopo a exportação
+- [x] Implementar status de entrega explícito por projeto/versão via banco e tRPC
+- [x] Testar persistência conjunta de créditos, links e status de entrega
+- [x] Vincular deliveryStatus explicitamente a projectId e assetId/versionId
+- [x] Adicionar teste Vitest de saveReleaseKit com créditos, links, status, ISRC e data
+- [x] Adicionar assetId persistente ao releaseKit e seletor de versão entregue no Press Kit
+- [x] Fortalecer teste de saveReleaseKit verificando releaseDate convertida e assetId
+- [x] Proteger explicitamente /cliente com guard de autenticação no frontend
+- [x] Testar comportamento de /cliente sem autenticação
+- [x] Adicionar teste de frontend de ClientPage sem autenticação validando que o ClientPortal não é carregado
+- [x] Implementar mutation persistente para editar status, progresso e responsável de projetos
+- [x] Adicionar teste do CRUD de projeto e atualização de estado/responsável
+- [x] Criar tabela/configuração persistente de canais de notificação e central de preferências
+- [x] Adicionar endpoint/contrato explícito DAW Bridge para ingestão de renders
+- [x] Adicionar teste do contrato DAW Bridge e registro de evento de render
+- [x] Clarificar cobertura de projeto: listagem e atualização persistentes; criação/arquivamento ficam para o próximo ciclo
+- [x] Implementar UI de central de preferências de notificação via tRPC
+- [x] Testar o fluxo frontend de salvar preferência de canal e eventos
+- [x] Tornar tipos de evento selecionáveis na central de notificações
+- [x] Testar o fluxo frontend de salvar preferência e payload enviado ao tRPC
