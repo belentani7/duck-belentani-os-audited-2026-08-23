@@ -10,10 +10,18 @@ const t = initTRPC.context<TrpcContext>().create({
 export const router = t.router;
 export const publicProcedure = t.procedure;
 
+export function isAuthenticatedUser(user: TrpcContext["user"]): user is NonNullable<TrpcContext["user"]> {
+  return Boolean(user);
+}
+
+export function isAdminUser(user: TrpcContext["user"]): boolean {
+  return user?.role === "admin";
+}
+
 const requireUser = t.middleware(async opts => {
   const { ctx, next } = opts;
 
-  if (!ctx.user) {
+  if (!isAuthenticatedUser(ctx.user)) {
     throw new TRPCError({ code: "UNAUTHORIZED", message: UNAUTHED_ERR_MSG });
   }
 
@@ -31,7 +39,7 @@ export const adminProcedure = t.procedure.use(
   t.middleware(async opts => {
     const { ctx, next } = opts;
 
-    if (!ctx.user || ctx.user.role !== 'admin') {
+    if (!isAdminUser(ctx.user)) {
       throw new TRPCError({ code: "FORBIDDEN", message: NOT_ADMIN_ERR_MSG });
     }
 

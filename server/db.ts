@@ -1,6 +1,6 @@
-import { eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { InsertUser, InsertOpportunity, opportunities, studioEvents, studioProjects, users } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -89,4 +89,33 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+export async function listProjects(ownerId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(studioProjects).where(eq(studioProjects.ownerId, ownerId)).orderBy(desc(studioProjects.lastActivityAt)).limit(20);
+}
+
+export async function listEvents(ownerId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(studioEvents).where(eq(studioEvents.ownerId, ownerId)).orderBy(desc(studioEvents.createdAt)).limit(10);
+}
+
+export async function listOpportunities(ownerId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(opportunities).where(eq(opportunities.ownerId, ownerId)).orderBy(desc(opportunities.createdAt)).limit(20);
+}
+
+export async function createEvent(input: typeof studioEvents.$inferInsert) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  return db.insert(studioEvents).values(input);
+}
+
+export async function createOpportunity(input: Omit<InsertOpportunity, "ownerId"> & { ownerId: number }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  const result = await db.insert(opportunities).values(input);
+  return result;
+}

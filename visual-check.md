@@ -1,0 +1,5 @@
+# Verificação visual
+
+A interface foi verificada em desktop (1280x720) e mobile (390x844). A composição mantém o painel lateral no desktop, transforma-o em menu recolhível no mobile, conserva contraste entre fundo escuro e verde neon e apresenta métricas em duas colunas no mobile. O estado vazio do banco aparece de forma explícita e não simula projetos ou eventos inexistentes. O nome autenticado exibido no preview veio do contexto de sessão disponível no ambiente.
+
+Próximo ponto de validação: testar com usuário autenticado e criar um briefing para confirmar a persistência e a atualização das métricas do pipeline.

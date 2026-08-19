@@ -1,0 +1,30 @@
+# Project TODO
+
+- [x] Painel inicial em português para Duck/Lucas, com foco em Recife, Aracaju e colaboração internacional
+- [x] Dashboard operacional com projetos ativos, próximos passos, receita prevista e pendências
+- [ ] Gestão de projetos musicais com estados de produção e responsáveis
+- [ ] Upload e organização de stems/renders por versão, com metadados de arquivo e integridade
+- [ ] Player de áudio com waveform visual e comparação A/B
+- [ ] Comentários e marcadores temporais vinculados à waveform
+- [ ] Área de cliente separada do painel interno, inspirada no Duck Studio OS existente
+- [x] Catálogo de serviços e formulário de briefing para transformar produção em oportunidades comerciais
+- [x] Motor de orçamento inicial baseado em serviço, duração, número de faixas e prazo
+- [ ] Registro de pagamentos, royalties, créditos e status de entrega
+- [ ] Central de notificações e eventos automatizáveis, preparada para Telegram e outros canais
+- [ ] Análise local de áudio no navegador para pico, RMS, duração e waveform
+- [ ] Estrutura de integração futura com DAW Bridge para renders exportados
+- [ ] Press kit e ficha de lançamento com ISRC, créditos e links
+- [x] Identidade visual dark com verde neon contido, painéis translúcidos e ação direta
+- [x] Testes Vitest para regras de negócio, autenticação, orçamento e permissões
+- [x] Verificação visual responsiva em desktop e mobile
+- [ ] Documentação de operação e próximos passos de integrações externas
+- [x] Conectar o dashboard a dados persistidos de projetos, eventos, métricas e pendências, removendo arrays mock do Home.tsx
+- [x] Implementar briefing completo com cliente, serviço, duração, número de faixas, prazo e submissão persistida
+- [x] Expandir o motor de orçamento para considerar serviço, duração, número de faixas e prazo
+- [x] Adicionar testes detectáveis para briefing, orçamento expandido, permissões e fluxos essenciais de autenticação
+- [x] Confirmar que o Vitest executa todas as suítes novas e existentes
+- [x] Conectar tempo recuperado, saúde de automações e próximos passos a dados ou cálculos reais, removendo os valores estáticos restantes
+- [x] Adicionar testes Vitest para a mutation de briefing e para autorização de rotas protegidas/admin
+- [x] Adicionar teste Vitest da mutation workspace.createOpportunity, cobrindo sucesso, evento criado e erro sem autenticação
+- [x] Adicionar testes de autorização tRPC protegida/admin validando os erros reais dos procedimentos
+- [x] Testar workspace.createOpportunity rejeitando chamada sem ctx.user com erro UNAUTHORIZED
