@@ -15,6 +15,7 @@ const dbMocks = vi.hoisted(() => ({
   listAudioAssets: vi.fn().mockResolvedValue([]),
   listWaveformComments: vi.fn().mockResolvedValue([]),
   listLeadSearches: vi.fn().mockResolvedValue([]),
+  setLeadSearchSchedule: vi.fn().mockResolvedValue(undefined),
   createLeadSearch: vi.fn().mockResolvedValue([{ insertId: 31 }]),
   listLeadRecords: vi.fn().mockResolvedValue([]),
   createLeadSource: vi.fn().mockResolvedValue(undefined),
@@ -25,6 +26,7 @@ const dbMocks = vi.hoisted(() => ({
 
 vi.mock("./db", () => dbMocks);
 vi.mock("./storage", () => ({ storageGetSignedUrl: vi.fn().mockResolvedValue("data:application/octet-stream;base64,AAEC"), storagePreparePut: vi.fn() }));
+vi.mock("./_core/heartbeat", () => ({ createHeartbeatJob: vi.fn().mockResolvedValue({ taskUid: "task-31", nextExecutionAt: "2026-08-19T12:00:00Z" }), deleteHeartbeatJob: vi.fn().mockResolvedValue(undefined) }));
 const scraperMocks = vi.hoisted(() => ({ scrapePublicPage: vi.fn().mockResolvedValue({ title: "Fonte pública", lead: { companyName: "Estúdio Recife", email: "contato@estudio.com", phone: "+5581999990000", website: "https://estudio.com", intentSignal: "contratar", score: 85, dedupeKey: "contato@estudio.com||estudio.com" } }) }));
 vi.mock("./leadScraper", () => scraperMocks);
 
@@ -130,6 +132,17 @@ describe("workspace router", () => {
     expect(dbMocks.createLeadSearch).toHaveBeenCalledWith(expect.objectContaining({ ownerId: 7, niche: "Música", area: "Recife" }));
     expect(dbMocks.createLeadRecord).toHaveBeenCalledWith(expect.objectContaining({ ownerId: 7, searchId: 31, email: "contato@estudio.com", score: 85 }));
     expect(dbMocks.touchLeadSearch).toHaveBeenCalledWith(7, 31, { inserted: 1, duplicates: 0, errors: 0 });
+  });
+
+  it("ativa e pausa o refresh periódico da busca do proprietário", async () => {
+    dbMocks.listLeadSearches.mockResolvedValueOnce([{ id: 31, ownerId: 7, name: "Radar", niche: "Música", area: "Recife", scheduleCronTaskUid: null }]);
+    const caller = appRouter.createCaller(context({ id: 7, role: "user" }));
+    const active = await caller.workspace.scheduleLeadRefresh({ searchId: 31, cron: "0 */6 * * * *" });
+    expect(active.taskUid).toBe("task-31");
+    expect(dbMocks.setLeadSearchSchedule).toHaveBeenCalledWith(7, 31, "task-31");
+    dbMocks.listLeadSearches.mockResolvedValueOnce([{ id: 31, ownerId: 7, name: "Radar", niche: "Música", area: "Recife", scheduleCronTaskUid: "task-31" }]);
+    await caller.workspace.disableLeadRefresh({ searchId: 31 });
+    expect(dbMocks.setLeadSearchSchedule).toHaveBeenCalledWith(7, 31, null);
   });
 
   it("persiste fonte sem contato e ainda registra evento agregado", async () => {

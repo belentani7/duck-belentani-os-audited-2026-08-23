@@ -87,7 +87,15 @@
 - [x] Implementar colectores, normalización, validación de contacto y deduplicación
 - [x] Implementar scoring de potencial y estados de pipeline comercial
 - [x] Implementar panel de búsqueda, triage, exportación CSV y filtros avanzados
-- [ ] Adicionar automações de actualización y notificaciones sin spam o envío automático no autorizado
+- [x] Adicionar automações de actualización y notificaciones sin spam o envío automático no autorizado
+- [x] Integrar notificações automáticas de leads às preferências e eventTypes configurados
+- [x] Restringir e documentar o canal de notificação lead suportado no backend, respeitando preferência habilitada e eventType
+- [x] Documentar na UI e na operação que alertas automáticos de leads usam atualmente apenas o feed interno
+- [x] Adicionar teste de copy/UI para o limite de canal interno dos alertas de leads
+- [x] Adicionar testes HTTP do callback refreshLeads para cron-only, sucesso, falha e taskUid
+- [x] Adicionar cooldown persistente por busca para suprimir alertas repetidos
+- [x] Adicionar testes do endpoint cron-only e do fluxo de notificação anti-spam
+- [x] Cobrir em teste o gate de preferência lead e o cooldown persistente de notificação
 - [x] Adicionar KPI explícito e persistente de leads duplicados na Home
 - [x] Substituir os KPIs centrais musicais por KPIs de leads, buscas, duplicados e conversões
 - [x] Completar testes de createLeadSearch para fonte, evento, erro, no-contact e retorno agregado

@@ -185,9 +185,11 @@ export const leadSearches = mysqlTable("leadSearches", {
   variablesJson: text("variablesJson"),
   sourceUrlsJson: text("sourceUrlsJson"),
   active: int("active").notNull().default(1),
+  scheduleCronTaskUid: varchar("scheduleCronTaskUid", { length: 65 }),
   lastInsertedCount: int("lastInsertedCount").notNull().default(0),
   lastDuplicateCount: int("lastDuplicateCount").notNull().default(0),
   lastErrorCount: int("lastErrorCount").notNull().default(0),
+  lastNotifiedAt: timestamp("lastNotifiedAt"),
   lastRunAt: timestamp("lastRunAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });

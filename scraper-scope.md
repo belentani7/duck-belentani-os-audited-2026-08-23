@@ -26,3 +26,7 @@ Cada oportunidade deve conter título, URL original, fonte, nicho, localização
 
 [1]: https://www.linkedin.com/help/linkedin/answer/a1341387 "LinkedIn — Prohibited software and extensions"
 [2]: https://developers.google.com/custom-search/v1/overview "Google Developers — Custom Search JSON API"
+
+## Regra operacional de notificações
+
+A automação de leads respeita as preferências persistidas, exige o evento `lead` habilitado e, nesta versão, envia alertas automáticos somente para o **feed interno**. Telegram e WhatsApp continuam disponíveis para outras preferências configuráveis, mas não são usados pelo refresh automático de leads até existir uma integração de entrega específica e autorizada. O sistema aplica cooldown persistente por busca para evitar alertas repetidos.

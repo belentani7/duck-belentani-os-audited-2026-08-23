@@ -173,10 +173,33 @@ export async function listLeadSearches(ownerId: number) {
   return db.select().from(leadSearches).where(eq(leadSearches.ownerId, ownerId)).orderBy(desc(leadSearches.createdAt)).limit(50);
 }
 
+export async function getLeadSearchByTaskUid(taskUid: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const rows = await db.select().from(leadSearches).where(eq(leadSearches.scheduleCronTaskUid, taskUid)).limit(1);
+  return rows[0];
+}
+
+export async function setLeadSearchSchedule(ownerId: number, searchId: number, taskUid: string | null) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  return db.update(leadSearches).set({ scheduleCronTaskUid: taskUid }).where(and(eq(leadSearches.ownerId, ownerId), eq(leadSearches.id, searchId)));
+}
+
 export async function createLeadSearch(input: Omit<InsertLeadSearch, "ownerId"> & { ownerId: number }) {
   const db = await getDb();
   if (!db) throw new Error("Database unavailable");
   return db.insert(leadSearches).values(input);
+}
+
+export async function claimLeadNotification(ownerId: number, searchId: number, cooldownMinutes = 360) {
+  const db = await getDb();
+  if (!db) return false;
+  const rows = await db.select({ lastNotifiedAt: leadSearches.lastNotifiedAt }).from(leadSearches).where(and(eq(leadSearches.ownerId, ownerId), eq(leadSearches.id, searchId))).limit(1);
+  const lastNotifiedAt = rows[0]?.lastNotifiedAt;
+  if (lastNotifiedAt && Date.now() - new Date(lastNotifiedAt).getTime() < cooldownMinutes * 60_000) return false;
+  await db.update(leadSearches).set({ lastNotifiedAt: new Date() }).where(and(eq(leadSearches.ownerId, ownerId), eq(leadSearches.id, searchId)));
+  return true;
 }
 
 export async function touchLeadSearch(ownerId: number, searchId: number, counts: { inserted: number; duplicates: number; errors: number }) {

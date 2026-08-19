@@ -1,0 +1,1 @@
+ALTER TABLE `leadSearches` ADD `scheduleCronTaskUid` varchar(65);

@@ -1,9 +1,12 @@
 import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
+import { parse as parseCookie } from "cookie";
+import { createHeartbeatJob, deleteHeartbeatJob } from "./_core/heartbeat";
+import { refreshLeadSearch } from "./leadAutomation";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { TRPCError } from "@trpc/server";
-import { createAudioAsset, createDawRender, createEvent, createOpportunity, createWaveformComment, createLedgerEntry, createReleaseKit, createRoyaltySplit, listAudioAssets, listDawRenders, listEvents, listLedgerEntries, listNotificationPreferences, listOpportunities, listProjects, listReleaseKits, listRoyaltySplits, listWaveformComments, saveNotificationPreference, updateProject, updateProjectStatus, listLeadSearches, createLeadSearch, listLeadRecords, createLeadSource, createLeadRecord, touchLeadSearch, updateLeadRecord } from "./db";
+import { createAudioAsset, createDawRender, createEvent, createOpportunity, createWaveformComment, createLedgerEntry, createReleaseKit, createRoyaltySplit, listAudioAssets, listDawRenders, listEvents, listLedgerEntries, listNotificationPreferences, listOpportunities, listProjects, listReleaseKits, listRoyaltySplits, listWaveformComments, saveNotificationPreference, updateProject, updateProjectStatus, listLeadSearches, getLeadSearchByTaskUid, setLeadSearchSchedule, createLeadSearch, listLeadRecords, createLeadSource, createLeadRecord, touchLeadSearch, updateLeadRecord } from "./db";
 import { storageGetSignedUrl, storagePreparePut } from "./storage";
 import { calculateQuote, formatQuoteRange, type ServiceType } from "../shared/quote";
 import { z } from "zod";
@@ -86,6 +89,30 @@ export const appRouter = router({
       return { ...quote, range: formatQuoteRange(quote.min, quote.max) };
     }),
     leadSearches: protectedProcedure.query(({ ctx }) => listLeadSearches(ctx.user.id)),
+    scheduleLeadRefresh: protectedProcedure.input(z.object({ searchId: z.number().int().positive(), cron: z.string().regex(/^\d+ \S+ \S+ \S+ \S+ \S+$/).default("0 */6 * * * *") })).mutation(async ({ ctx, input }) => {
+      const search = (await listLeadSearches(ctx.user.id)).find((item) => item.id === input.searchId);
+      if (!search) throw new TRPCError({ code: "NOT_FOUND", message: "Busca não encontrada." });
+      if (search.scheduleCronTaskUid) return { taskUid: search.scheduleCronTaskUid, alreadyActive: true } as const;
+      const sessionToken = parseCookie(ctx.req?.headers?.cookie ?? "")[COOKIE_NAME] ?? "";
+      const job = await createHeartbeatJob({ name: `lead-refresh-${search.id}`, cron: input.cron, path: "/api/scheduled/refreshLeads", description: `Atualização automática de leads: ${search.name}` }, sessionToken);
+      await setLeadSearchSchedule(ctx.user.id, search.id, job.taskUid);
+      return { ...job, alreadyActive: false } as const;
+    }),
+    disableLeadRefresh: protectedProcedure.input(z.object({ searchId: z.number().int().positive() })).mutation(async ({ ctx, input }) => {
+      const search = (await listLeadSearches(ctx.user.id)).find((item) => item.id === input.searchId);
+      if (!search) throw new TRPCError({ code: "NOT_FOUND", message: "Busca não encontrada." });
+      if (search.scheduleCronTaskUid) {
+        const sessionToken = parseCookie(ctx.req?.headers?.cookie ?? "")[COOKIE_NAME] ?? "";
+        await deleteHeartbeatJob(search.scheduleCronTaskUid, sessionToken);
+        await setLeadSearchSchedule(ctx.user.id, search.id, null);
+      }
+      return { success: true } as const;
+    }),
+    runLeadRefresh: protectedProcedure.input(z.object({ searchId: z.number().int().positive() })).mutation(async ({ ctx, input }) => {
+      const search = (await listLeadSearches(ctx.user.id)).find((item) => item.id === input.searchId);
+      if (!search) throw new TRPCError({ code: "NOT_FOUND", message: "Busca não encontrada." });
+      return refreshLeadSearch(search);
+    }),
     leads: protectedProcedure.input(z.object({ searchId: z.number().int().positive().optional() }).optional()).query(({ ctx, input }) => listLeadRecords(ctx.user.id, input?.searchId)),
     createLeadSearch: protectedProcedure.input(z.object({ name: z.string().trim().min(2).max(160), niche: z.string().trim().min(2).max(120), area: z.string().trim().min(2).max(180), variables: z.array(z.string().trim().min(1).max(80)).max(20), sourceUrls: z.array(z.string().url().max(1000)).min(1).max(10) })).mutation(async ({ ctx, input }) => {
       const result = await createLeadSearch({ ownerId: ctx.user.id, name: input.name, niche: input.niche, area: input.area, variablesJson: JSON.stringify(input.variables), sourceUrlsJson: JSON.stringify(input.sourceUrls), active: 1 });
