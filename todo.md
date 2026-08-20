@@ -1,5 +1,9 @@
 # Project TODO
 
+- [x] Auditar integralmente arquitetura, arquivos, banco, rotas, UI, automações, scraping, segurança e testes — escopo e achados documentados em AUDITORIA-ESCOPO-E-ACHADOS.md
+- [x] Mapear gaps entre o estado atual e um padrão de produção 10/10
+- [x] Produzir plano mestre de aproximadamente 2000 palavras com fases, prioridades, critérios e riscos
+
 - [x] Painel inicial em português para Duck/Lucas, com foco em Recife, Aracaju e colaboração internacional
 - [x] Dashboard operacional com projetos ativos, próximos passos, receita prevista e pendências
 - [x] Gestão de projetos musicais com estados de produção e responsáveis
