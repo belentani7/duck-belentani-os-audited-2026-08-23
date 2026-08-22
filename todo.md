@@ -114,8 +114,8 @@
 - [x] Adicionar testes Vitest para rotas de prospecção, autorização, deduplicação, persistência e status
 - [x] Escribir pruebas de datos, permissões, conformidade y documentación de operación
 
-- [ ] Auditar profundamente código, banco, integrações, automações, segurança, testes, build e documentação
-- [ ] Verificar que nenhum segredo ou arquivo sensível será incluído no pacote de preservação
-- [ ] Gerar relatório de auditoria e inventário de versão
-- [ ] Salvar código e relatório no GitHub
-- [ ] Salvar pacote de auditoria no Google Drive
+- [x] Auditar profundamente código, banco, integrações, automações, segurança, testes, build e documentação
+- [x] Verificar que nenhum segredo ou arquivo sensível será incluído no pacote de preservação
+- [x] Gerar relatório de auditoria e inventário de versão
+- [x] Salvar código e relatório no GitHub
+- [x] Salvar pacote de auditoria no Google Drive
