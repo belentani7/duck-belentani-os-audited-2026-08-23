@@ -113,3 +113,9 @@
 - [x] Adicionar filtros avançados por texto, nicho, área, score, fonte e disponibilidade de contato
 - [x] Adicionar testes Vitest para rotas de prospecção, autorização, deduplicação, persistência e status
 - [x] Escribir pruebas de datos, permissões, conformidade y documentación de operación
+
+- [ ] Auditar profundamente código, banco, integrações, automações, segurança, testes, build e documentação
+- [ ] Verificar que nenhum segredo ou arquivo sensível será incluído no pacote de preservação
+- [ ] Gerar relatório de auditoria e inventário de versão
+- [ ] Salvar código e relatório no GitHub
+- [ ] Salvar pacote de auditoria no Google Drive
