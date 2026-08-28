@@ -2,7 +2,6 @@ import { and, desc, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { InsertUser, InsertOpportunity, opportunities, studioEvents, studioProjects, users, audioAssets, waveformComments, InsertAudioAsset, InsertWaveformComment, ledgerEntries, royaltySplits, releaseKits, notificationPreferences, dawRenders, leadSearches, leadSources, leadRecords, InsertLeadSearch, InsertLeadRecord } from "../drizzle/schema";
 import { ENV } from './_core/env';
-import { filterAssetsForProject } from "../shared/audio-version";
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
@@ -132,8 +131,14 @@ export async function listOpportunities(ownerId: number) {
 export async function listAudioAssets(ownerId: number, projectId: number) {
   const db = await getDb();
   if (!db) return [];
-  const rows = await db.select().from(audioAssets).where(eq(audioAssets.ownerId, ownerId)).orderBy(desc(audioAssets.createdAt)).limit(50);
-  return filterAssetsForProject(rows, projectId);
+  return db.select().from(audioAssets).where(and(eq(audioAssets.ownerId, ownerId), eq(audioAssets.projectId, projectId))).orderBy(desc(audioAssets.createdAt)).limit(50);
+}
+
+export async function getAudioAssetByKey(ownerId: number, storageKey: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const rows = await db.select().from(audioAssets).where(and(eq(audioAssets.ownerId, ownerId), eq(audioAssets.storageKey, storageKey))).limit(1);
+  return rows[0];
 }
 
 export async function listWaveformComments(ownerId: number, assetId: number) {
