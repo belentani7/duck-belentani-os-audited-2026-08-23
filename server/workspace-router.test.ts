@@ -13,6 +13,7 @@ const dbMocks = vi.hoisted(() => ({
   listOpportunities: vi.fn().mockResolvedValue([]),
   listProjects: vi.fn().mockResolvedValue([]),
   listAudioAssets: vi.fn().mockResolvedValue([]),
+  getAudioAssetByKey: vi.fn().mockResolvedValue(undefined),
   listWaveformComments: vi.fn().mockResolvedValue([]),
   listLeadSearches: vi.fn().mockResolvedValue([]),
   setLeadSearchSchedule: vi.fn().mockResolvedValue(undefined),
